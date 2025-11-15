@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Alert,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Photo } from '../../types';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
@@ -23,14 +25,57 @@ interface Props {
 
 const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [userPhotos, setUserPhotos] = useState<Photo[]>([]);
   const [introText] = useState(
     VOICE_PROMPTS.photoIntroduction[
       Math.floor(Math.random() * VOICE_PROMPTS.photoIntroduction.length)
     ]
   );
 
+  useEffect(() => {
+    requestPermissions();
+  }, []);
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'We need access to your photos to help you create stories from your memories.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const handlePhotoSelect = (photo: Photo) => {
     setSelectedPhoto(photo);
+  };
+
+  const handlePickPhoto = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const newPhoto: Photo = {
+          id: `user-${Date.now()}`,
+          url: asset.uri,
+          description: 'Your photo',
+          category: 'other',
+        };
+
+        // Add to user photos and select it
+        setUserPhotos([newPhoto, ...userPhotos]);
+        setSelectedPhoto(newPhoto);
+      }
+    } catch (error) {
+      console.error('Error picking photo:', error);
+      Alert.alert('Error', 'Failed to pick photo. Please try again.');
+    }
   };
 
   const handleContinue = () => {
@@ -38,6 +83,8 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
       navigation.navigate('Interview', { photoId: selectedPhoto.id });
     }
   };
+
+  const allPhotos = [...userPhotos, ...SAMPLE_PHOTOS];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -48,13 +95,22 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.subtitle}>{introText}</Text>
         </View>
 
+        {/* Add Photo Button */}
+        <View style={styles.addPhotoSection}>
+          <Button
+            title="📸 Choose from My Photos"
+            onPress={handlePickPhoto}
+            size="large"
+          />
+        </View>
+
         {/* Photo Grid */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {SAMPLE_PHOTOS.map((photo) => (
+          {allPhotos.map((photo) => (
             <PhotoCard
               key={photo.id}
               photo={photo}
@@ -102,6 +158,10 @@ const styles = StyleSheet.create({
     fontSize: FONTS.title,
     color: COLORS.textSecondary,
     lineHeight: FONTS.title * 1.4,
+  },
+  addPhotoSection: {
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
   },
   scrollView: {
     flex: 1,

@@ -189,26 +189,15 @@ export class ElevenLabsService {
   }
 
   /**
-   * Convert speech to text using ElevenLabs STT
-   * Note: ElevenLabs may not have direct STT. Consider using alternatives:
-   * - Expo Speech Recognition
-   * - Google Speech-to-Text
-   * - OpenAI Whisper API
-   *
-   * For now, this is a placeholder that would integrate with your chosen STT service
+   * Convert speech to text using OpenAI Whisper API
+   * @param audioUri - Local file URI of the audio recording
+   * @returns Transcribed text
    */
   async speechToText(audioUri: string): Promise<string> {
     try {
-      // This is a placeholder - implement your preferred STT service
-      // Options:
-      // 1. OpenAI Whisper API
-      // 2. Google Cloud Speech-to-Text
-      // 3. Expo Speech Recognition (for basic needs)
-
-      console.log('Speech-to-text for:', audioUri);
-
-      // Placeholder return
-      return 'Transcribed text will appear here';
+      // Import OpenAI service dynamically to avoid circular dependencies
+      const { openaiService } = await import('./openaiService');
+      return await openaiService.speechToText(audioUri);
     } catch (error) {
       console.error('Speech-to-text error:', error);
       throw error;

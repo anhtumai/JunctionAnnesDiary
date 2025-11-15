@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { RootStackParamList } from '../../types';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
 import { Button } from '../../components/common';
 import { SAMPLE_PHOTOS } from '../../constants/data';
+import { elevenLabsService } from '../../services/elevenLabsService';
 
 type StoryPreviewScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,6 +34,8 @@ interface Props {
 
 const StoryPreviewScreen: React.FC<Props> = ({ navigation, route }) => {
   const { storyId } = route.params;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock story data - in real app, this would come from storage/API
   const mockStory = {
@@ -50,8 +53,19 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
     audioUrl: 'mock-audio-url',
   };
 
+  // Initialize audio service on mount
+  useEffect(() => {
+    elevenLabsService.initialize();
+
+    // Cleanup on unmount
+    return () => {
+      elevenLabsService.stopSpeaking();
+    };
+  }, []);
+
   const handleSave = () => {
-    // In real app, save to storage
+    // Stop audio before navigating
+    elevenLabsService.stopSpeaking();
     navigation.navigate('Home');
   };
 
@@ -60,9 +74,24 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
     console.log('Share story');
   };
 
-  const handlePlayAudio = () => {
-    // In real app, play audio narration
-    console.log('Play audio');
+  const handlePlayAudio = async () => {
+    try {
+      if (isPlaying) {
+        // Stop if already playing
+        await elevenLabsService.stopSpeaking();
+        setIsPlaying(false);
+      } else {
+        // Play the story narrative using ElevenLabs
+        setIsLoading(true);
+        await elevenLabsService.speak(mockStory.narrative);
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      alert('Failed to play audio. Please check your internet connection.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -109,16 +138,19 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
           style={styles.audioPlayer}
           onPress={handlePlayAudio}
           activeOpacity={0.8}
+          disabled={isLoading}
         >
           <View style={styles.audioIcon}>
             <Ionicons
-              name="play"
+              name={isPlaying ? 'stop' : 'play'}
               size={SIZES.iconSize}
               color={COLORS.textWhite}
             />
           </View>
           <View style={styles.audioInfo}>
-            <Text style={styles.audioTitle}>Listen to Your Story</Text>
+            <Text style={styles.audioTitle}>
+              {isLoading ? 'Loading...' : isPlaying ? 'Stop Story' : 'Listen to Your Story'}
+            </Text>
             <Text style={styles.audioDuration}>~ 2 minutes</Text>
           </View>
         </TouchableOpacity>

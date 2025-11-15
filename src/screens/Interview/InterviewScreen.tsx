@@ -15,6 +15,8 @@ import { RootStackParamList, VoiceState, InterviewQuestion } from '../../types';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
 import { Button, VoiceIndicator } from '../../components/common';
 import { SAMPLE_PHOTOS, INTERVIEW_QUESTIONS } from '../../constants/data';
+import { elevenLabsService } from '../../services/elevenLabsService';
+import { openaiService } from '../../services/openaiService';
 
 type InterviewScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -35,41 +37,150 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<string[]>([]);
+  const [transcripts, setTranscripts] = useState<{ question: string; answer: string }[]>([]);
+  const [audioRecordings, setAudioRecordings] = useState<string[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestion | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
 
   useEffect(() => {
+    // Initialize audio service
+    elevenLabsService.initialize();
+
     // Select relevant questions based on photo category
     const relevantQuestions = INTERVIEW_QUESTIONS.filter(
       (q) => q.category !== 'details' || Math.random() > 0.5
     ).slice(0, 5);
 
+    setQuestions(relevantQuestions);
+
     if (relevantQuestions.length > 0) {
       setCurrentQuestion(relevantQuestions[0]);
+      // Speak the first question
+      speakQuestion(relevantQuestions[0].text);
     }
+
+    // Cleanup on unmount
+    return () => {
+      elevenLabsService.cleanup();
+    };
   }, []);
 
-  const handleStartListening = () => {
-    setVoiceState('listening');
-    // Simulate listening for 3 seconds
-    setTimeout(() => {
-      setVoiceState('processing');
-      setTimeout(() => {
-        setVoiceState('idle');
-        // Add mock response
-        setResponses([...responses, 'User response recorded']);
-        // Move to next question
-        if (currentQuestionIndex < 4) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-          const nextQuestion = INTERVIEW_QUESTIONS[currentQuestionIndex + 1];
-          setCurrentQuestion(nextQuestion);
-        }
-      }, 1500);
-    }, 3000);
+  const speakQuestion = async (questionText: string) => {
+    try {
+      await elevenLabsService.speak(questionText);
+    } catch (error) {
+      console.error('Error speaking question:', error);
+    }
   };
 
-  const handleComplete = () => {
-    // Navigate to story preview with generated story
-    navigation.navigate('StoryPreview', { storyId: 'temp-' + Date.now() });
+  const handleStartListening = async () => {
+    try {
+      setVoiceState('listening');
+
+      // Start recording user's response
+      await elevenLabsService.startRecording();
+
+      // Auto-stop after 30 seconds (or user can tap again to stop)
+      setTimeout(async () => {
+        if (voiceState === 'listening') {
+          await handleStopListening();
+        }
+      }, 30000);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Failed to start recording. Please check microphone permissions.');
+      setVoiceState('idle');
+    }
+  };
+
+  const handleStopListening = async () => {
+    try {
+      setVoiceState('processing');
+
+      // Stop recording and get audio URI
+      const audioUri = await elevenLabsService.stopRecording();
+
+      // Save the audio recording
+      setAudioRecordings([...audioRecordings, audioUri]);
+
+      // Transcribe the audio
+      try {
+        const transcription = await elevenLabsService.speechToText(audioUri);
+
+        // Save transcript with question
+        if (currentQuestion) {
+          setTranscripts([
+            ...transcripts,
+            { question: currentQuestion.text, answer: transcription },
+          ]);
+        }
+
+        setResponses([...responses, transcription]);
+      } catch (transcriptionError) {
+        console.error('Transcription error:', transcriptionError);
+        // Still save as recorded even if transcription fails
+        setResponses([...responses, `Response ${responses.length + 1} recorded`]);
+      }
+
+      // Move to next question
+      if (currentQuestionIndex < questions.length - 1) {
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        const nextQuestion = questions[nextIndex];
+        setCurrentQuestion(nextQuestion);
+
+        // Speak the next question
+        await speakQuestion(nextQuestion.text);
+      }
+
+      setVoiceState('idle');
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      alert('Failed to save recording.');
+      setVoiceState('idle');
+    }
+  };
+
+  const handleMicPress = async () => {
+    if (voiceState === 'listening') {
+      await handleStopListening();
+    } else if (voiceState === 'idle') {
+      await handleStartListening();
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      setIsGeneratingStory(true);
+
+      // Stop any ongoing audio
+      await elevenLabsService.cleanup();
+
+      // Generate story from transcripts using AI
+      if (transcripts.length > 0) {
+        const photoDescription = photo?.description || 'A meaningful photo';
+
+        const storyResult = await openaiService.generateStory(
+          photoDescription,
+          transcripts
+        );
+
+        // In a real app, you would save the story to storage here
+        console.log('Generated Story:', storyResult);
+
+        // Navigate to story preview with generated story ID
+        navigation.navigate('StoryPreview', { storyId: 'temp-' + Date.now() });
+      } else {
+        // No transcripts available, navigate anyway with mock data
+        navigation.navigate('StoryPreview', { storyId: 'temp-' + Date.now() });
+      }
+    } catch (error) {
+      console.error('Error generating story:', error);
+      alert('Failed to generate story. Please try again.');
+    } finally {
+      setIsGeneratingStory(false);
+    }
   };
 
   if (!photo) {
@@ -80,8 +191,8 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  const progress = ((currentQuestionIndex + 1) / 5) * 100;
-  const isComplete = currentQuestionIndex >= 4;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const isComplete = currentQuestionIndex >= questions.length - 1 && responses.length > 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -96,7 +207,7 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
           <Text style={styles.progressText}>
-            Question {currentQuestionIndex + 1} of 5
+            Question {currentQuestionIndex + 1} of {questions.length}
           </Text>
         </View>
 
@@ -166,8 +277,8 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
           <>
             <TouchableOpacity
               style={styles.micButton}
-              onPress={handleStartListening}
-              disabled={voiceState !== 'idle'}
+              onPress={handleMicPress}
+              disabled={voiceState === 'processing'}
               activeOpacity={0.8}
             >
               <Ionicons
@@ -180,15 +291,16 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
               {voiceState === 'idle'
                 ? 'Tap to answer'
                 : voiceState === 'listening'
-                ? 'Listening...'
+                ? 'Tap to stop'
                 : 'Processing...'}
             </Text>
           </>
         ) : (
           <Button
-            title="Save My Story"
+            title={isGeneratingStory ? 'Generating Story...' : 'Save My Story'}
             onPress={handleComplete}
             size="large"
+            disabled={isGeneratingStory}
             icon={
               <Ionicons
                 name="save"
