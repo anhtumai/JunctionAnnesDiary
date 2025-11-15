@@ -6,25 +6,17 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
-import { RootStackParamList, MemorySuggestion } from '../../types';
-import { Button, VoiceIndicator } from '../../components/common';
+import { MemorySuggestion } from '../../types';
+import { Button } from '../../components/common';
 import { MemorySuggestionCard } from '../../components/common/MemorySuggestionCard';
 import { VOICE_PROMPTS, MEMORY_SUGGESTIONS } from '../../constants/data';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Home'
->;
-
-interface Props {
-  navigation: HomeScreenNavigationProp;
-}
-
-const HomeScreen: React.FC<Props> = ({ navigation }) => {
+const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const [greeting] = useState(
     VOICE_PROMPTS.greeting[
       Math.floor(Math.random() * VOICE_PROMPTS.greeting.length)
@@ -93,7 +85,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.secondaryAction}
-              onPress={() => navigation.navigate('Diary' as any)}
+              onPress={() => navigation.navigate('DiaryTab')}
               activeOpacity={0.8}
             >
               <Ionicons
