@@ -27,11 +27,14 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Image
+      {
+        story.photo &&
+        <Image
         source={{ uri: story.photo.url }}
         style={styles.image}
         resizeMode="cover"
       />
+      }
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>
           {story.title}

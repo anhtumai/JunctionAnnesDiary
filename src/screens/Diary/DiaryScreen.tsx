@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,11 @@ import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { StoryCard } from '../../components/common';
 import { LegacyStory } from '../../types';
 import { SAMPLE_PHOTOS } from '../../constants/data';
+import { storageService } from '../../services/storageService';
 
 const DiaryScreen: React.FC = () => {
   // Mock stories - in real app, load from storage
-  const [stories] = useState<LegacyStory[]>([
+  const [stories, setStories] = useState<LegacyStory[]>([
     {
       id: '1',
       title: 'The Day My Bakery Opened',
@@ -61,6 +62,15 @@ const DiaryScreen: React.FC = () => {
       },
     },
   ]);
+
+  useEffect(() => {
+    // In a real app, load stories from storage here
+    const loadStory = async () => {
+          const loadedStory = await storageService.getAllStories();
+          setStories([...stories, ...loadedStory]);
+        };
+        loadStory();
+  }, []);
 
   const handleStoryPress = (storyId: string) => {
     console.log('Open story:', storyId);
