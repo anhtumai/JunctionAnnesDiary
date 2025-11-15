@@ -10,9 +10,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
-import { RootStackParamList } from '../../types';
+import { RootStackParamList, MemorySuggestion } from '../../types';
 import { Button, VoiceIndicator } from '../../components/common';
-import { VOICE_PROMPTS } from '../../constants/data';
+import { MemorySuggestionCard } from '../../components/common/MemorySuggestionCard';
+import { VOICE_PROMPTS, MEMORY_SUGGESTIONS } from '../../constants/data';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -32,6 +33,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleStartInterview = () => {
     navigation.navigate('PhotoSuggestion');
+  };
+
+  const handleSuggestionPress = (suggestion: MemorySuggestion) => {
+    // Navigate to photo suggestion screen with the selected category
+    navigation.navigate('PhotoSuggestion', { category: suggestion.category });
   };
 
   return (
@@ -107,43 +113,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               Memory Suggestions for Today
             </Text>
             <View style={styles.suggestionCards}>
-              {[
-                {
-                  icon: 'cake',
-                  title: 'Birthday Memories',
-                  subtitle: 'Celebrate special moments',
-                },
-                {
-                  icon: 'home',
-                  title: 'Childhood Home',
-                  subtitle: 'Where it all began',
-                },
-                {
-                  icon: 'heart',
-                  title: 'Love Stories',
-                  subtitle: 'Cherished relationships',
-                },
-              ].map((suggestion, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.suggestionCard}
-                  onPress={handleStartInterview}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={suggestion.icon as any}
-                    size={32}
-                    color={COLORS.primary}
-                  />
-                  <View style={styles.suggestionText}>
-                    <Text style={styles.suggestionTitle}>
-                      {suggestion.title}
-                    </Text>
-                    <Text style={styles.suggestionSubtitle}>
-                      {suggestion.subtitle}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+              {MEMORY_SUGGESTIONS.map((suggestion) => (
+                <MemorySuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  onPress={handleSuggestionPress}
+                />
               ))}
             </View>
           </View>
@@ -236,28 +211,6 @@ const styles = StyleSheet.create({
   },
   suggestionCards: {
     gap: SPACING.sm,
-  },
-  suggestionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.cardBackground,
-    borderRadius: SIZES.borderRadius,
-    padding: SPACING.md,
-    gap: SPACING.md,
-    ...SHADOWS.small,
-  },
-  suggestionText: {
-    flex: 1,
-  },
-  suggestionTitle: {
-    fontSize: FONTS.title,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: 4,
-  },
-  suggestionSubtitle: {
-    fontSize: FONTS.body,
-    color: COLORS.textSecondary,
   },
 });
 

@@ -9,21 +9,29 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, Photo } from '../../types';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { Button, PhotoCard } from '../../components/common';
-import { SAMPLE_PHOTOS, VOICE_PROMPTS } from '../../constants/data';
+import { SAMPLE_PHOTOS, VOICE_PROMPTS, MEMORY_CATEGORIES } from '../../constants/data';
 
 type PhotoSuggestionScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'PhotoSuggestion'
 >;
 
+type PhotoSuggestionScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'PhotoSuggestion'
+>;
+
 interface Props {
   navigation: PhotoSuggestionScreenNavigationProp;
+  route: PhotoSuggestionScreenRouteProp;
 }
 
-const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
+const PhotoSuggestionScreen: React.FC<Props> = ({ navigation, route }) => {
+  const category = route.params?.category;
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [userPhotos, setUserPhotos] = useState<Photo[]>([]);
   const [introText] = useState(
@@ -84,14 +92,21 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const allPhotos = [...userPhotos, ...SAMPLE_PHOTOS];
+  // Filter sample photos by category if provided
+  const filteredSamplePhotos = category
+    ? SAMPLE_PHOTOS.filter((photo) => photo.category === category)
+    : SAMPLE_PHOTOS;
+
+  const allPhotos = [...userPhotos, ...filteredSamplePhotos];
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Choose a Memory</Text>
+          <Text style={styles.title}>
+            {category ? MEMORY_CATEGORIES[category] : 'Choose a Memory'}
+          </Text>
           <Text style={styles.subtitle}>{introText}</Text>
         </View>
 

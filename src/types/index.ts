@@ -100,10 +100,19 @@ export interface FamilyMember {
   sharedStories: string[]; // story IDs
 }
 
+export interface MemorySuggestion {
+  id: string;
+  title: string;
+  description: string;
+  icon: string; // emoji or icon name
+  category: PhotoCategory;
+  color?: string; // optional background color
+}
+
 // Navigation types
 export type RootStackParamList = {
   Home: undefined;
-  PhotoSuggestion: undefined;
+  PhotoSuggestion: { category?: PhotoCategory } | undefined;
   Interview: { photoId: string };
   StoryPreview: { storyId: string };
   Diary: undefined;

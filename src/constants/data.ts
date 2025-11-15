@@ -1,4 +1,4 @@
-import { InterviewQuestion, Photo } from '../types';
+import { InterviewQuestion, Photo, MemorySuggestion } from '../types';
 
 // Sample interview questions categorized by type
 export const INTERVIEW_QUESTIONS: InterviewQuestion[] = [
@@ -200,3 +200,49 @@ export const MEMORY_CATEGORIES = {
   milestone: 'Life achievements and important moments',
   other: 'Other precious memories',
 };
+
+// Memory suggestions for the home screen
+export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
+  {
+    id: 'suggestion-1',
+    title: 'Birthday Memories',
+    description: 'Celebrate special moments',
+    icon: '🎂',
+    category: 'birthday',
+  },
+  {
+    id: 'suggestion-2',
+    title: 'Childhood Home',
+    description: 'Where it all began',
+    icon: '🏠',
+    category: 'childhood',
+  },
+  {
+    id: 'suggestion-3',
+    title: 'Love Stories',
+    description: 'Cherished relationships',
+    icon: '❤️',
+    category: 'wedding',
+  },
+  {
+    id: 'suggestion-4',
+    title: 'Family Gatherings',
+    description: 'Together with loved ones',
+    icon: '👨‍👩‍👧‍👦',
+    category: 'family',
+  },
+  {
+    id: 'suggestion-5',
+    title: 'Career Journey',
+    description: 'Professional achievements',
+    icon: '💼',
+    category: 'business',
+  },
+  {
+    id: 'suggestion-6',
+    title: 'Holiday Traditions',
+    description: 'Seasonal celebrations',
+    icon: '🎄',
+    category: 'holiday',
+  },
+];
