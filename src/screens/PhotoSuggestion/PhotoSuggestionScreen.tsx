@@ -96,13 +96,13 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Add Photo Button */}
-        <View style={styles.addPhotoSection}>
+        {/* <View style={styles.addPhotoSection}>
           <Button
             title="📸 Choose from My Photos"
             onPress={handlePickPhoto}
             size="large"
           />
-        </View>
+        </View> */}
 
         {/* Photo Grid */}
         <ScrollView
