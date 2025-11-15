@@ -7,14 +7,18 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { StoryCard } from '../../components/common';
-import { LegacyStory } from '../../types';
+import { LegacyStory, RootStackParamList } from '../../types';
 import { SAMPLE_PHOTOS } from '../../constants/data';
 import { storageService } from '../../services/storageService';
 
+type DiaryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const DiaryScreen: React.FC = () => {
-  // Mock stories - in real app, load from storage
+  const navigation = useNavigation<DiaryScreenNavigationProp>();
 
   const defaultStories: LegacyStory[] = [
     {
@@ -76,8 +80,7 @@ const DiaryScreen: React.FC = () => {
   }, []);
 
   const handleStoryPress = (storyId: string) => {
-    console.log('Open story:', storyId);
-    // Navigate to story preview or detail screen
+    navigation.navigate('StoryPreview', { storyId });
   };
 
   const handlePlayStory = (storyId: string) => {
