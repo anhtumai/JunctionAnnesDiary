@@ -15,7 +15,8 @@ import { storageService } from '../../services/storageService';
 
 const DiaryScreen: React.FC = () => {
   // Mock stories - in real app, load from storage
-  const [stories, setStories] = useState<LegacyStory[]>([
+
+  const defaultStories: LegacyStory[] = [
     {
       id: '1',
       title: 'The Day My Bakery Opened',
@@ -61,13 +62,15 @@ const DiaryScreen: React.FC = () => {
         duration: 135,
       },
     },
-  ]);
+  ];
+  const [stories, setStories] = useState<LegacyStory[]>(defaultStories);
 
   useEffect(() => {
     // In a real app, load stories from storage here
     const loadStory = async () => {
           const loadedStory = await storageService.getAllStories();
-          setStories([...stories, ...loadedStory]);
+          setStories([...defaultStories, ...loadedStory]);
+          
         };
         loadStory();
   }, []);
