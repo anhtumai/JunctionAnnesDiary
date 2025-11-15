@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LegacyStory, InterviewSession, UserProfile } from '../types';
+import { LegacyStory, InterviewSession, UserProfile, Photo } from '../types';
 
 /**
  * Local Storage Service
@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   SESSIONS: '@annes_diary:sessions',
   USER_PROFILE: '@annes_diary:user_profile',
   SETTINGS: '@annes_diary:settings',
+  USER_PHOTOS: '@annes_diary:user_photos',
 };
 
 export class StorageService {
@@ -197,6 +198,34 @@ export class StorageService {
     } catch (error) {
       console.error('Error getting settings:', error);
       return {};
+    }
+  }
+
+  /**
+   * Save user photos
+   */
+  async saveUserPhotos(photos: Photo[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_PHOTOS,
+        JSON.stringify(photos)
+      );
+    } catch (error) {
+      console.error('Error saving user photos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user photos
+   */
+  async getUserPhotos(): Promise<Photo[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PHOTOS);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error getting user photos:', error);
+      return [];
     }
   }
 
