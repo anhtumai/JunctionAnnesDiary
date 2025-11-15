@@ -209,6 +209,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Celebrate special moments',
     icon: '🎂',
     category: 'birthday',
+    imageUrl: 'https://images.unsplash.com/photo-1530229923-fa3305bb0ef4?w=400',
   },
   {
     id: 'suggestion-2',
@@ -216,6 +217,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Where it all began',
     icon: '🏠',
     category: 'childhood',
+    imageUrl: 'https://images.unsplash.com/photo-1476234251651-f353cf1c0db6?w=400',
   },
   {
     id: 'suggestion-3',
@@ -223,6 +225,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Cherished relationships',
     icon: '❤️',
     category: 'wedding',
+    imageUrl: 'https://images.unsplash.com/photo-1464547323744-4edd0cd0c746?w=400',
   },
   {
     id: 'suggestion-4',
@@ -230,6 +233,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Together with loved ones',
     icon: '👨‍👩‍👧‍👦',
     category: 'family',
+    imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400',
   },
   {
     id: 'suggestion-5',
@@ -237,6 +241,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Professional achievements',
     icon: '💼',
     category: 'business',
+    imageUrl: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400',
   },
   {
     id: 'suggestion-6',
@@ -244,5 +249,6 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Seasonal celebrations',
     icon: '🎄',
     category: 'holiday',
+    imageUrl: 'https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=400',
   },
 ];

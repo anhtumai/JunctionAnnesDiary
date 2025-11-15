@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { MemorySuggestion } from '../../types';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
 
@@ -18,9 +18,11 @@ export const MemorySuggestionCard: React.FC<MemorySuggestionCardProps> = ({
       onPress={() => onPress(suggestion)}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{suggestion.icon}</Text>
-      </View>
+      <Image
+        source={{ uri: suggestion.imageUrl }}
+        style={styles.image}
+        resizeMode="cover"
+      />
       <View style={styles.textContainer}>
         <Text style={styles.title}>{suggestion.title}</Text>
         <Text style={styles.description}>{suggestion.description}</Text>
@@ -39,17 +41,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...SHADOWS.medium,
   },
-  iconContainer: {
+  image: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 8,
     marginRight: SPACING.md,
-  },
-  icon: {
-    fontSize: 32,
   },
   textContainer: {
     flex: 1,

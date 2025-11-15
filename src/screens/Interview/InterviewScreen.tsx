@@ -158,27 +158,30 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
       await elevenLabsService.cleanup();
 
       // Generate story from transcripts using AI
-      if (transcripts.length > 0) {
-        const photoDescription = photo?.description || 'A meaningful photo';
+      if (transcripts.length > 0 && photo) {
+        const photoDescription = photo.description || 'A meaningful photo';
 
         const storyResult = await openaiService.generateStory(
           photoDescription,
           transcripts
         );
 
-        // In a real app, you would save the story to storage here
         console.log('Generated Story:', storyResult);
 
-        // Navigate to story preview with generated story ID
-        navigation.navigate('StoryPreview', { storyId: 'temp-' + Date.now() });
+        // Navigate to story preview with generated story data
+        navigation.navigate('StoryPreview', {
+          title: storyResult.title,
+          narrative: storyResult.narrative,
+          photo: photo,
+        });
       } else {
-        // No transcripts available, navigate anyway with mock data
-        navigation.navigate('StoryPreview', { storyId: 'temp-' + Date.now() });
+        // No transcripts available, show error
+        alert('Please answer at least one question before completing the interview.');
+        setIsGeneratingStory(false);
       }
     } catch (error) {
       console.error('Error generating story:', error);
       alert('Failed to generate story. Please try again.');
-    } finally {
       setIsGeneratingStory(false);
     }
   };

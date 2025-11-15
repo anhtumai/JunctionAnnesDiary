@@ -106,6 +106,7 @@ export interface MemorySuggestion {
   description: string;
   icon: string; // emoji or icon name
   category: PhotoCategory;
+  imageUrl: string; // image URL for the suggestion
   color?: string; // optional background color
 }
 
@@ -114,7 +115,11 @@ export type RootStackParamList = {
   Home: undefined;
   PhotoSuggestion: { category?: PhotoCategory } | undefined;
   Interview: { photoId: string };
-  StoryPreview: { storyId: string };
+  StoryPreview: {
+    title: string;
+    narrative: string;
+    photo: Photo;
+  };
   Diary: undefined;
   Profile: undefined;
 };

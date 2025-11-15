@@ -14,8 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../types';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
 import { Button } from '../../components/common';
-import { SAMPLE_PHOTOS } from '../../constants/data';
 import { elevenLabsService } from '../../services/elevenLabsService';
+import { storageService } from '../../services/storageService';
+import { LegacyStory } from '../../types';
 
 type StoryPreviewScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,24 +34,16 @@ interface Props {
 }
 
 const StoryPreviewScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { storyId } = route.params;
+  const { title, narrative, photo } = route.params;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Mock story data - in real app, this would come from storage/API
-  const mockStory = {
-    id: storyId,
-    title: 'The Day My Bakery Opened',
-    photo: SAMPLE_PHOTOS[0],
-    narrative: `It was a beautiful morning in June 1965 when I opened the doors to my first bakery. The smell of fresh bread filled the air, and I could hardly contain my excitement. My husband had helped me paint the walls a soft cream color, and we had hung lace curtains in the windows.
-
-I remember feeling both nervous and thrilled. Would people like my pastries? Would they come back? But as the first customers walked in, drawn by the aroma of cinnamon rolls and fresh croissants, I knew this was the beginning of something special.
-
-The bakery became more than just a business—it became a gathering place for the community. Neighbors would stop by for their morning coffee, and children would press their noses against the display case, choosing their favorite treats.
-
-Those were some of the happiest years of my life. Every loaf of bread, every cake I decorated, was made with love. And the friendships I formed with my customers became treasures that I carry with me to this day.`,
+  const story = {
+    title,
+    narrative,
+    photo,
     createdAt: new Date().toISOString(),
-    audioUrl: 'mock-audio-url',
   };
 
   // Initialize audio service on mount
@@ -63,10 +56,40 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
     };
   }, []);
 
-  const handleSave = () => {
-    // Stop audio before navigating
-    elevenLabsService.stopSpeaking();
-    navigation.navigate('Home');
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      // Stop audio before saving
+      elevenLabsService.stopSpeaking();
+
+      // Create a complete LegacyStory object
+      const legacyStory: LegacyStory = {
+        id: `story-${Date.now()}`,
+        title: story.title,
+        photo: story.photo,
+        narrative: story.narrative,
+        createdAt: story.createdAt,
+        updatedAt: story.createdAt,
+        metadata: {
+          category: story.photo.category,
+          wordCount: story.narrative.split(' ').length,
+          people: story.photo.people || [],
+          tags: [],
+        },
+      };
+
+      // Save to storage
+      await storageService.saveStory(legacyStory);
+
+      // Navigate back to home
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error('Error saving story:', error);
+      alert('Failed to save story. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleShare = () => {
@@ -83,7 +106,7 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
       } else {
         // Play the story narrative using ElevenLabs
         setIsLoading(true);
-        await elevenLabsService.speak(mockStory.narrative);
+        await elevenLabsService.speak(story.narrative);
         setIsPlaying(true);
       }
     } catch (error) {
@@ -114,19 +137,19 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
         {/* Photo */}
         <View style={styles.photoContainer}>
           <Image
-            source={{ uri: mockStory.photo.url }}
+            source={{ uri: story.photo.url }}
             style={styles.photo}
             resizeMode="cover"
           />
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>{mockStory.title}</Text>
+        <Text style={styles.title}>{story.title}</Text>
 
         {/* Date */}
         <Text style={styles.date}>
           Created on{' '}
-          {new Date(mockStory.createdAt).toLocaleDateString('en-US', {
+          {new Date(story.createdAt).toLocaleDateString('en-US', {
             month: 'long',
             day: 'numeric',
             year: 'numeric',
@@ -158,15 +181,17 @@ Those were some of the happiest years of my life. Every loaf of bread, every cak
         {/* Narrative */}
         <View style={styles.narrativeContainer}>
           <Text style={styles.narrativeTitle}>Your Story</Text>
-          <Text style={styles.narrative}>{mockStory.narrative}</Text>
+          <Text style={styles.narrative}>{story.narrative}</Text>
         </View>
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <Button
-            title="Save to My Diary"
+            title={isSaving ? "Saving..." : "Save to My Diary"}
             onPress={handleSave}
             size="large"
+            disabled={isSaving}
+            loading={isSaving}
             icon={
               <Ionicons name="save" size={32} color={COLORS.textWhite} />
             }
