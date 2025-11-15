@@ -20,6 +20,7 @@ export class OpenAIService {
    * @returns Transcribed text
    */
   async speechToText(audioUri: string): Promise<string> {
+    return `Speech to text for ${audioUri}`;
     try {
       // Read the audio file from the device
       const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
@@ -58,6 +59,11 @@ export class OpenAIService {
     photoDescription: string,
     responses: { question: string; answer: string }[]
   ): Promise<{ title: string; narrative: string }> {
+    const fist10Chars = photoDescription.substring(0, 10);
+    return {
+      title: `Mocked title for ${fist10Chars}`,
+      narrative: `Mocked title for ${fist10Chars}`
+    }
     try {
       const prompt = this.buildStoryPrompt(photoDescription, responses);
 

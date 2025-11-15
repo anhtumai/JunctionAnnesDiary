@@ -209,7 +209,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Celebrate special moments',
     icon: '🎂',
     category: 'birthday',
-    imageUrl: 'https://images.unsplash.com/photo-1530229923-fa3305bb0ef4?w=400',
+    imageUrl: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=400',
   },
   {
     id: 'suggestion-2',
@@ -217,7 +217,7 @@ export const MEMORY_SUGGESTIONS: MemorySuggestion[] = [
     description: 'Where it all began',
     icon: '🏠',
     category: 'childhood',
-    imageUrl: 'https://images.unsplash.com/photo-1476234251651-f353cf1c0db6?w=400',
+    imageUrl: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400',
   },
   {
     id: 'suggestion-3',
