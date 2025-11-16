@@ -11,13 +11,14 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList, VoiceState, InterviewQuestion } from '../../types';
+import { RootStackParamList, VoiceState, InterviewQuestion, Photo } from '../../types';
 import { COLORS, FONTS, SPACING, SIZES, SHADOWS } from '../../constants/theme';
 import { Button, VoiceIndicator } from '../../components/common';
 import { SAMPLE_PHOTOS, INTERVIEW_QUESTIONS } from '../../constants/data';
 import { elevenLabsService } from '../../services/elevenLabsService';
 import { openaiService } from '../../services/openaiService';
 import { storageService } from '../../services/storageService';
+import { photoService } from '../../services/photoService';
 
 type InterviewScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,7 +34,7 @@ interface Props {
 
 const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
   const { photoId } = route.params;
-  const photo = SAMPLE_PHOTOS.find((p) => p.id === photoId);
+  const [photo, setPhoto] = useState<Photo | null>(null);
 
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -48,24 +49,43 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
     // Initialize audio service
     elevenLabsService.initialize();
 
+    // Load photo from photoService
+    loadPhoto();
+
     // Select relevant questions based on photo category
+    // This will be updated once photo is loaded
+  }, []);
+
+  // Load photo when photoId changes
+  useEffect(() => {
+    if (photo) {
+      selectRelevantQuestions();
+    }
+  }, [photo]);
+
+  const loadPhoto = async () => {
+    try {
+      const foundPhoto = await photoService.getPhotoById(photoId);
+      setPhoto(foundPhoto || null);
+    } catch (error) {
+      console.error('Error loading photo:', error);
+      setPhoto(null);
+    }
+  };
+
+  const selectRelevantQuestions = () => {
     const relevantQuestions = INTERVIEW_QUESTIONS.filter(
       (q) => q.category !== 'details' || Math.random() > 0.5
     ).slice(0, 5);
 
     setQuestions(relevantQuestions);
-
+    
     if (relevantQuestions.length > 0) {
       setCurrentQuestion(relevantQuestions[0]);
       // Speak the first question
       speakQuestion(relevantQuestions[0].text);
     }
-
-    // Cleanup on unmount
-    return () => {
-      elevenLabsService.cleanup();
-    };
-  }, []);
+  };
 
   const speakQuestion = async (questionText: string) => {
     try {
@@ -204,7 +224,7 @@ const InterviewScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isComplete = currentQuestionIndex >= questions.length - 1 && responses.length > 0;
+  const isComplete = responses.length >= questions.length;
 
   return (
     <SafeAreaView style={styles.container}>

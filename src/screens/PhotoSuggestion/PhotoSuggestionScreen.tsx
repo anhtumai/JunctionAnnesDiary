@@ -13,6 +13,7 @@ import { RootStackParamList, Photo } from '../../types';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { Button, PhotoCard } from '../../components/common';
 import { SAMPLE_PHOTOS, VOICE_PROMPTS } from '../../constants/data';
+import { photoService } from '../../services/photoService';
 
 type PhotoSuggestionScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -25,7 +26,7 @@ interface Props {
 
 const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const [userPhotos, setUserPhotos] = useState<Photo[]>([]);
+  const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [introText] = useState(
     VOICE_PROMPTS.photoIntroduction[
       Math.floor(Math.random() * VOICE_PROMPTS.photoIntroduction.length)
@@ -34,7 +35,18 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     requestPermissions();
+    loadPhotos();
   }, []);
+
+  const loadPhotos = async () => {
+    try {
+      const photos = await photoService.getAllPhotos();
+      setAllPhotos(photos);
+    } catch (error) {
+      console.error('Error loading photos:', error);
+      setAllPhotos(SAMPLE_PHOTOS); // Fallback to sample photos
+    }
+  };
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -68,8 +80,9 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
           category: 'other',
         };
 
-        // Add to user photos and select it
-        setUserPhotos([newPhoto, ...userPhotos]);
+        // Add to photo service and reload photos
+        await photoService.addUserPhoto(newPhoto);
+        await loadPhotos();
         setSelectedPhoto(newPhoto);
       }
     } catch (error) {
@@ -83,8 +96,6 @@ const PhotoSuggestionScreen: React.FC<Props> = ({ navigation }) => {
       navigation.navigate('Interview', { photoId: selectedPhoto.id });
     }
   };
-
-  const allPhotos = [...userPhotos, ...SAMPLE_PHOTOS];
 
   return (
     <SafeAreaView style={styles.container}>
